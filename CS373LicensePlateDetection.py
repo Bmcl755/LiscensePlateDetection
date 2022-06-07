@@ -129,6 +129,26 @@ def imageThreshholding(pixel_array, image_width, image_height):
                 result[height][width] = 0
     return result
 
+def computeDilation3x3(pixel_array, image_width, image_height):
+    result = createInitializedGreyscalePixelArray(image_width, image_height)
+    for height in range(1, image_height - 1):
+        top = height - 1
+        bottom = height + 1
+        for width in range(1, image_width - 1):
+            left = width - 1
+            right = width + 1
+            num = 0
+            for level in range(top, bottom + 1):
+                for length in range(left, right + 1):
+                    x = pixel_array[level][length]
+                    if x > num:
+                        num = x
+            if num > 0:
+                result[height][width] = 1
+            else:
+                result[height][width] = 0
+    return result
+
 
 # This is our code skeleton that performs the license plate detection.
 # Feel free to try it on your own images of cars, but keep in mind that with our algorithm developed in this lecture,
@@ -176,6 +196,7 @@ def main():
     px_array = computeStandardDeviationImage5x5(px_array, image_width, image_height)
     px_array = scaleTo0And255AndQuantize(px_array, image_width, image_height)
     px_array = imageThreshholding(px_array, image_width, image_height)
+    px_array = computeDilation3x3(px_array, image_width, image_height)
 
 
     # compute a dummy bounding box centered in the middle of the input image, and with as size of half of width and height
