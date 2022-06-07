@@ -55,27 +55,50 @@ def createInitializedGreyscalePixelArray(image_width, image_height, initValue = 
     return new_array
 
 # _________HelperFuncs__________
-
 def convertIMGtoGreyscale(pixel_array_r, pixel_array_g, pixel_array_b, image_width, image_height):
     greyscale_pixel_array = createInitializedGreyscalePixelArray(image_width, image_height)
-
-    for i in range(len(pixel_array_r)):
-        for j in range(len(pixel_array_r[i])):
-            r = pixel_array_r[i][j]
-            g = pixel_array_g[i][j]
-            b = pixel_array_b[i][j]
-
+    for height in range(image_height):
+        for width in range(image_width):
+            r = pixel_array_r[height][width]
+            g = pixel_array_g[height][width]
+            b = pixel_array_b[height][width]
             x = round(0.299 * r + 0.587 * g + 0.114 * b)
-
-            greyscale_pixel_array[i][j] = x
-
+            greyscale_pixel_array[height][width] = x
     return greyscale_pixel_array
+
+def computeMinAndMaxValues(pixel_array, image_width, image_height):
+    min_value = 255
+    max_value = 0
+    for height in range(image_height):
+        for width in range(image_width):
+            x = pixel_array[height][width]
+            if x > max_value:
+                max_value = x
+            elif x < min_value:
+                min_value = x
+    return (min_value, max_value)
+
+def scaleTo0And255AndQuantize(pixel_array, image_width, image_height):
+    result = createInitializedGreyscalePixelArray(image_width, image_height)
+    min_value, max_value = computeMinAndMaxValues(pixel_array, image_width, image_height)
+    if min_value == max_value:
+        return result
+    for height in range(image_height):
+        for width in range(image_width):
+            x = pixel_array[height][width]
+            s = round((x - min_value) * ((255 - 0) / (max_value - min_value)))
+            if s < 0:
+                result[height][width] = 0
+            elif s > 255:
+                result[height][width] = 255
+            else:
+                result[height][width] = s
+    return result
 
 # This is our code skeleton that performs the license plate detection.
 # Feel free to try it on your own images of cars, but keep in mind that with our algorithm developed in this lecture,
 # we won't detect arbitrary or difficult to detect license plates!
 def main():
-
     command_line_arguments = sys.argv[1:]
 
     SHOW_DEBUG_FIGURES = True
@@ -114,6 +137,7 @@ def main():
     # STUDENT IMPLEMENTATION here
 
     px_array = convertIMGtoGreyscale(px_array_r, px_array_g, px_array_b, image_width, image_height)
+    px_array = scaleTo0And255AndQuantize(px_array, image_width, image_height)
 
 
     # compute a dummy bounding box centered in the middle of the input image, and with as size of half of width and height
