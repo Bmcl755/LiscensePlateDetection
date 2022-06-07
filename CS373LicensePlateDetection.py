@@ -95,6 +95,41 @@ def scaleTo0And255AndQuantize(pixel_array, image_width, image_height):
                 result[height][width] = s
     return result
 
+def computeStandardDeviationImage5x5(pixel_array, image_width, image_height):
+    result = createInitializedGreyscalePixelArray(image_width, image_height)
+    for height in range(2, image_height-2):
+        top = height - 2
+        bottom = height + 2
+        for width in range(2, image_width-2):
+            left = width - 2
+            right = width + 2
+            meanList = []
+            for level in range(top, bottom+1):
+                for length in range(left, right+1):
+                    pix = pixel_array[level][length]
+                    meanList.append(pix)
+            mean = 0
+            for num in meanList:
+                mean += num
+            mean = mean/len(meanList)
+            variance = 0
+            for m in range(len(meanList)):
+                variance += pow(meanList[m] - mean, 2)
+            variance = variance/len(meanList)
+            result[height][width] = math.sqrt(variance)
+    return result
+
+def imageThreshholding(pixel_array, image_width, image_height):
+    result = createInitializedGreyscalePixelArray(image_width, image_height)
+    for height in range(image_height):
+        for width in range(image_width):
+            if pixel_array[height][width] >= 150:
+                result[height][width] = 255
+            else:
+                result[height][width] = 0
+    return result
+
+
 # This is our code skeleton that performs the license plate detection.
 # Feel free to try it on your own images of cars, but keep in mind that with our algorithm developed in this lecture,
 # we won't detect arbitrary or difficult to detect license plates!
@@ -138,6 +173,9 @@ def main():
 
     px_array = convertIMGtoGreyscale(px_array_r, px_array_g, px_array_b, image_width, image_height)
     px_array = scaleTo0And255AndQuantize(px_array, image_width, image_height)
+    px_array = computeStandardDeviationImage5x5(px_array, image_width, image_height)
+    px_array = scaleTo0And255AndQuantize(px_array, image_width, image_height)
+    px_array = imageThreshholding(px_array, image_width, image_height)
 
 
     # compute a dummy bounding box centered in the middle of the input image, and with as size of half of width and height
