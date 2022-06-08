@@ -1,5 +1,6 @@
 import math
 import sys
+import queue
 from pathlib import Path
 
 from matplotlib import pyplot
@@ -169,6 +170,36 @@ def computeErosion3x3(pixel_array, image_width, image_height):
                 result[height][width] = 255
     return result
 
+def computeConnectedComponentLabeling(pixel_array, image_width, image_height):
+    result = createInitializedGreyscalePixelArray(image_width, image_height)
+    resultDict = {}
+    label = 0
+    seenDict = {}
+    for p in range(1, image_height-1):
+        for o in range(1, image_width-1):
+            seenDict[p, o] = 0
+
+    for height in range(1, image_height-1):
+        for width in range(1, image_width-1):
+            if pixel_array[height][width] > 0 and seenDict[height, width] == 0:
+                label += 1
+                resultDict[label] = 0
+                seenDict[height, width] = 1
+                q = queue.Queue()
+                q.put((height, width))
+                while q.qsize() > 0:
+                    (y, x) = q.get()
+                    result[y][x] = label
+                    resultDict[label] += 1
+                    searchArea = [1, -1, 0, 0]
+                    for z in range(len(searchArea)):
+                        vertSearch = y + searchArea[z]
+                        horzSearch = x + searchArea[3-z]
+                        if (pixel_array[vertSearch][horzSearch] > 0) and (seenDict[vertSearch, horzSearch] == 0):
+                            q.put((vertSearch, horzSearch))
+                            seenDict[vertSearch, horzSearch] = 1
+    return result, resultDict
+
 # This is our code skeleton that performs the license plate detection.
 # Feel free to try it on your own images of cars, but keep in mind that with our algorithm developed in this lecture,
 # we won't detect arbitrary or difficult to detect license plates!
@@ -215,10 +246,13 @@ def main():
     px_array = computeStandardDeviationImage5x5(px_array, image_width, image_height)
     px_array = scaleTo0And255AndQuantize(px_array, image_width, image_height)
     px_array = imageThreshholding(px_array, image_width, image_height)
-    for i in range(5):
+    for i in range(4):
         px_array = computeDilation3x3(px_array, image_width, image_height)
-    for i in range(5):
+    for i in range(4):
         px_array = computeErosion3x3(px_array, image_width, image_height)
+
+    (connectedCompArray, connectedCompDict) = computeConnectedComponentLabeling(px_array, image_width, image_height)
+    largestComponent = max(connectedCompDict, key=connectedCompDict.get)
 
     # compute a dummy bounding box centered in the middle of the input image, and with as size of half of width and height
     center_x = image_width / 2.0
