@@ -256,23 +256,30 @@ def main():
     axs1[1, 0].set_title('Input blue channel of image')
     axs1[1, 0].imshow(px_array_b, cmap='gray')
 
-
     # STUDENT IMPLEMENTATION here
 
     px_array = convertIMGtoGreyscale(px_array_r, px_array_g, px_array_b, image_width, image_height)
-    px_array = scaleTo0And255AndQuantize(px_array, image_width, image_height)
-    px_array = computeStandardDeviationImage5x5(px_array, image_width, image_height)
-    px_array = scaleTo0And255AndQuantize(px_array, image_width, image_height)
-    px_array = imageThreshholding(px_array, image_width, image_height)
+    # Create processed image
+    px_array_processed = scaleTo0And255AndQuantize(px_array, image_width, image_height)
+    px_array_processed = computeStandardDeviationImage5x5(px_array_processed, image_width, image_height)
+    px_array_processed = scaleTo0And255AndQuantize(px_array_processed, image_width, image_height)
+    px_array_processed = imageThreshholding(px_array_processed, image_width, image_height)
     for i in range(4):
-        px_array = computeDilation3x3(px_array, image_width, image_height)
+        px_array_processed = computeDilation3x3(px_array_processed, image_width, image_height)
     for i in range(4):
-        px_array = computeErosion3x3(px_array, image_width, image_height)
+        px_array_processed = computeErosion3x3(px_array_processed, image_width, image_height)
 
-    (connectedCompArray, connectedCompDict) = computeConnectedComponentLabeling(px_array, image_width, image_height)
+    # Find connected components and return the largest one
+    (connectedCompArray, connectedCompDict) = computeConnectedComponentLabeling(px_array_processed, image_width, image_height)
     largestComponent = max(connectedCompDict, key=connectedCompDict.get)
-
     (bbox_min_y, bbox_min_x,  bbox_max_y, bbox_max_x) = computeBoundingBoxMinMax(connectedCompArray, largestComponent, image_width, image_height)
+
+    # If the boundaries do not met the aspect ratio try the next largest component
+    i = 2
+    while (bbox_max_x - bbox_min_x)/(bbox_max_y - bbox_min_y) < 1.5 or (bbox_max_x - bbox_min_x)/(bbox_max_y - bbox_min_y) > 5:
+        largestComponent = sorted(connectedCompDict, key=connectedCompDict.get)[-i]
+        (bbox_min_y, bbox_min_x, bbox_max_y, bbox_max_x) = computeBoundingBoxMinMax(connectedCompArray, largestComponent, image_width,image_height)
+        i += 1
 
     # Draw a bounding box as a rectangle into the input image
     axs1[1, 1].set_title('Final image of detection')
