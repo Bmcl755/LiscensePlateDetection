@@ -200,6 +200,24 @@ def computeConnectedComponentLabeling(pixel_array, image_width, image_height):
                             seenDict[vertSearch, horzSearch] = 1
     return result, resultDict
 
+def computeBoundingBoxMinMax(connectedCompArray, largestComponent, image_width, image_height):
+    minHeight = image_height
+    minWidth = image_width
+    maxHeight = 0
+    maxWidth = 0
+    for height in range(image_height):
+        for width in range(image_width):
+            if connectedCompArray[height][width] == largestComponent:
+                if minHeight > height:
+                    minHeight = height
+                elif maxHeight < height:
+                    maxHeight = height
+                if minWidth > width:
+                    minWidth = width
+                elif maxWidth < width:
+                    maxWidth = width
+    return minHeight, minWidth,  maxHeight, maxWidth
+
 # This is our code skeleton that performs the license plate detection.
 # Feel free to try it on your own images of cars, but keep in mind that with our algorithm developed in this lecture,
 # we won't detect arbitrary or difficult to detect license plates!
@@ -254,17 +272,7 @@ def main():
     (connectedCompArray, connectedCompDict) = computeConnectedComponentLabeling(px_array, image_width, image_height)
     largestComponent = max(connectedCompDict, key=connectedCompDict.get)
 
-    # compute a dummy bounding box centered in the middle of the input image, and with as size of half of width and height
-    center_x = image_width / 2.0
-    center_y = image_height / 2.0
-    bbox_min_x = center_x - image_width / 4.0
-    bbox_max_x = center_x + image_width / 4.0
-    bbox_min_y = center_y - image_height / 4.0
-    bbox_max_y = center_y + image_height / 4.0
-
-
-
-
+    (bbox_min_y, bbox_min_x,  bbox_max_y, bbox_max_x) = computeBoundingBoxMinMax(connectedCompArray, largestComponent, image_width, image_height)
 
     # Draw a bounding box as a rectangle into the input image
     axs1[1, 1].set_title('Final image of detection')
