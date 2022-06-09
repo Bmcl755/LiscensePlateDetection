@@ -48,7 +48,6 @@ def readRGBImageToSeparatePixelArrays(input_filename):
 
     return (image_width, image_height, pixel_array_r, pixel_array_g, pixel_array_b)
 
-
 # a useful shortcut method to create a list of lists based array representation for an image, initialized with a value
 def createInitializedGreyscalePixelArray(image_width, image_height, initValue = 0):
 
@@ -257,13 +256,14 @@ def main():
     axs1[1, 0].imshow(px_array_b, cmap='gray')
 
     # STUDENT IMPLEMENTATION here
-
     px_array = convertIMGtoGreyscale(px_array_r, px_array_g, px_array_b, image_width, image_height)
+
     # Create processed image
     px_array_processed = scaleTo0And255AndQuantize(px_array, image_width, image_height)
     px_array_processed = computeStandardDeviationImage5x5(px_array_processed, image_width, image_height)
     px_array_processed = scaleTo0And255AndQuantize(px_array_processed, image_width, image_height)
     px_array_processed = imageThreshholding(px_array_processed, image_width, image_height)
+
     for i in range(4):
         px_array_processed = computeDilation3x3(px_array_processed, image_width, image_height)
     for i in range(4):
